@@ -7,3 +7,6 @@ class WyllisDetectorConan(ConanFile):
 
     def requirements(self):
         self.requires('OpenCV/3.3.0@piponazo/testing')
+
+    def imports(self):
+        self.copy("*.dll", src="x64/vc15/bin", dst="bin")
