@@ -13,17 +13,31 @@
 //#include <opencv2/core/mat.hpp>
 
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 
+const cv::String keys {
+    "{help h         |          | print this message   }"
+    "{index          |0         | Camera index (default = 0)}"
+    "{seconds        |2         | Time during which the app will capture frames }"
+    "{output         |live.avi  | Time during which the app will capture frames }"
+    "{ts timestamp   |          | use time stamp       }"
+};
+
 int main(int argc, char **argv)
 {
-    cout << "App start!" << endl;
+    cv::CommandLineParser cmdParser (argc, argv, keys);
+    cmdParser.about("Capture video from webcam");
 
-    int camIndex = 0;
-    if (argc == 2) {
-        camIndex = std::atoi(argv[1]);
+    if (cmdParser.has("help")) {
+        cmdParser.printMessage();
+        return EXIT_SUCCESS;
     }
+
+    const int camIndex = cmdParser.get<int>("index");
+    const int secondsToRecord  = cmdParser.get<int>("seconds");
+    const cv::String outputPath  = cmdParser.get<cv::String>("output");
 
     cout << "camera index: " << camIndex << endl;
 
@@ -53,29 +67,26 @@ int main(int argc, char **argv)
     cv::VideoWriter writer;
     int codec = CV_FOURCC('M', 'J', 'P', 'G');  // select desired codec (must be available at runtime)
     double fps = 25.0;                          // framerate of the created video stream
-    string filename = "./live.avi";             // name of the output video file
-    writer.open(filename, codec, fps, frame.size(), isColor);
+    writer.open(outputPath, codec, fps, frame.size(), isColor);
 
     if (!writer.isOpened()) {
         cerr << "Could not open the output video file for write\n";
         return -1;
     }
-    
-    //--- GRAB AND WRITE LOOP
-    cout << "Writing videofile: " << filename << endl
-         << "Press any key to terminate" << endl;
 
-    for (;;) {
+    cout << "recording video during: " << secondsToRecord << " seconds " << endl;
+    cout << "Output video: " << outputPath << endl;
+
+    const auto start = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsedSeconds{0};
+
+    while (elapsedSeconds.count() <= secondsToRecord) {
         if (!capture.read(frame)) {
             cerr << "ERROR! blank frame grabbed\n";
             break;
         }
 
         writer.write(frame);
-
-        // show live and wait for a key with timeout long enough to show images
-        // imshow("Live", frame);
-        if (cv::waitKey(5) >= 0)
-            break;
+        elapsedSeconds = std::chrono::system_clock::now()-start;
     }
 }
