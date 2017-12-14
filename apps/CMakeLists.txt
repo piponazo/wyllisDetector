@@ -1,2 +1,5 @@
 add_executable(wyllisDetector wyllisDetector.cpp)
 target_link_libraries(wyllisDetector opencv_core opencv_highgui opencv_videoio opencv_imgproc)
+
+add_executable(capture_video capture_video.cpp)
+target_link_libraries(capture_video opencv_videoio opencv_core opencv_highgui)
